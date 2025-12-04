@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>† Blue Rose † OfFiCiAl WeB SiTe</title>
+    <style>
+        /* --- RETRO STYLES --- */
+        :root {
+            /* ベースは青だが、アクセントに黄色や赤を戻す */
+            --bg-color: #000b1a; /* 非常に暗い青色の背景 */
+            --text-main: #add8e6; /* ライトブルーのテキスト */
+            --text-highlight: #ffff00; /* 黄色の強調色（復活） */
+            --text-alert: #ff0000; /* 赤色の警告色（復活） */
+            --link-color: #00ffff; /* リンク色（シアン） */
+            --link-visited: #da70d6; /* 訪問済みリンク色（オーキッド：紫系に戻して視認性UP） */
+            --border-color: #003366; /* 濃い青色のボーダー */
+            --scroll-track: #001a33;
+            --scroll-thumb: #0066cc;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                /* 背景の光の粒を少し黄色も混ぜる */
+                radial-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, .2) 2px, transparent 3px),
+                radial-gradient(rgba(0, 255, 255, 0.8), rgba(0, 255, 255, .15) 1px, transparent 2px),
+                radial-gradient(rgba(255, 255, 0, 0.4), rgba(255, 255, 0, .1) 2px, transparent 3px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            color: var(--text-main);
+            font-family: "MS PGothic", "Osaka", "Courier New", monospace;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            // cursor: crosshair; /* カッコいいカーソル */
+            line-height: 1.4;
+        }
+
+        /* カスタムスクロールバー（IE風） */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--scroll-track); 
+            border-left: 1px solid #004488;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--scroll-thumb); 
+            border: 1px solid #add8e6;
+        }
+
+        /* リンクスタイル */
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+        a:visited {
+            color: var(--link-visited);
+        }
+        a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+            background-color: #003366;
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            width: 95%;
+            max-width: 900px;
+            margin: 0 auto;
+            border: 2px ridge var(--border-color); /* 立体的なボーダー */
+            background-color: rgba(0, 11, 26, 0.9);
+            min-height: 100vh;
+        }
+
+        /* ヘッダー */
+        header {
+            text-align: center;
+            border-bottom: 2px ridge var(--border-color);
+            padding: 20px 0;
+            background: linear-gradient(to bottom, #000b1a, #001f3f);
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #fff;
+            /* テキストシャドウに少し紫や白を混ぜて神秘的に */
+            text-shadow: 0 0 10px #0000ff, 0 0 20px #ffffff;
+            margin: 0;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: #ffffcc; /* 薄い黄色に戻してアクセント */
+            margin-top: 5px;
+        }
+
+        /* マーキーエリア */
+        .marquee-container {
+            background-color: #001a33;
+            color: var(--text-highlight);
+            font-weight: bold;
+            border-bottom: 1px solid var(--border-color);
+            padding: 2px 0;
+            font-size: 0.9rem;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .marquee-content {
+            display: inline-block;
+            animation: scroll-left 15s linear infinite;
+        }
+        @keyframes scroll-left {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* メインコンテンツエリア（2カラム） */
+        .main-area {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        /* 左サイドバー（メニュー） */
+        .sidebar {
+            width: 200px;
+            border-right: 2px ridge var(--border-color);
+            padding: 15px;
+            text-align: center;
+            background-color: #000f1a;
+            flex-shrink: 0;
+        }
+
+        .menu-box {
+            border: 1px solid #004488;
+            padding: 5px;
+            margin-bottom: 20px;
+        }
+        .menu-title {
+            background-color: #00264d;
+            color: #ffff00; /* 黄色文字で目立たせる */
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #004488;
+        }
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .menu-list li {
+            margin-bottom: 4px;
+            padding-left: 10px;
+        }
+        .menu-list li::before {
+            content: "† ";
+            color: #004488;
+        }
+
+        /* 右コンテンツ */
+        .content {
+            flex: 1;
+            padding: 20px;
+            min-width: 300px;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            color: #ffffff;
+            background-color: #00264d;
+            border-left: 5px solid #004488;
+            padding: 3px 10px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #00264d, #000b1a);
+        }
+
+        .update-log {
+            font-size: 0.85rem;
+            border: 1px dashed #004488;
+            padding: 10px;
+            height: 150px;
+            overflow-y: scroll;
+            background-color: #001326;
+            margin-bottom: 20px;
+        }
+
+        .date {
+            color: #ffff00; /* 日付を黄色に戻す（視認性UP） */
+        }
+        .new-mark {
+            color: #ff0000; /* NEWマークを赤に戻す */
+            font-weight: bold;
+            animation: blink 0.5s step-end infinite; /* 点滅を速く */
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .banner-area {
+            text-align: center;
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+        .banner {
+            display: inline-block;
+            width: 200px;
+            height: 40px;
+            background-color: #000;
+            border: 1px solid #fff;
+            color: #fff;
+            line-height: 40px;
+            margin: 5px;
+            font-size: 0.8rem;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        .my-banner {
+            background: linear-gradient(45deg, #003366, #000b1a);
+            border: 2px double #ffff00; /* 黄色の枠線 */
+        }
+
+        /* アクセスカウンター */
+        .counter-box {
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: "Courier New", monospace;
+        }
+        .counter {
+            background-color: #000000;
+            color: #ff0000; /* カウンターの数字を赤に戻す */
+            border: 1px inset #555;
+            padding: 2px 8px;
+            letter-spacing: 3px;
+            font-size: 1.2rem;
+            display: inline-block;
+        }
+        .counter-text {
+            font-size: 0.7rem;
+            display: block;
+            margin-top: 3px;
+            color: #ffff00;
+        }
+
+        /* 水平線 */
+        hr {
+            border: 0;
+            height: 1px;
+            /* 赤と青のグラデーション */
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 255, 0.75), rgba(0, 0, 0, 0));
+            margin: 20px 0;
+        }
+
+        /* フッター */
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            padding: 20px;
+            border-top: 2px ridge var(--border-color);
+            color: #6699cc;
+        }
+
+        /* マウスストーカー用 */
+        #cursor-text {
+            position: absolute;
+            pointer-events: none;
+            color: #ffff00; /* 黄色に戻す */
+            font-size: 10px;
+            white-space: nowrap;
+            z-index: 9999;
+            transition: transform 0.1s;
+        }
+
+        /* スマホ対応 */
+        @media (max-width: 600px) {
+            .main-area {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 2px ridge var(--border-color);
+            }
+        }
+
+        /* キラキラ装飾 */
+        .kirakira {
+            color: #ffff00; /* 黄色に戻す */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="subtitle">Welcome to the Azure Abyss...</div>
+        <h1>† Blue Rose †</h1>
+        <div class="subtitle">～蒼薔薇の館～</div>
+    </header>
+
+    <div class="marquee-container">
+        <div class="marquee-content">
+            ようこそ、Blue Roseへ... ここは管理人の趣味と静寂を綴る場所です... 荒らし、晒しは厳禁です... キリ番報告はBBSまで... Best viewed with Internet Explorer 4.0...
+        </div>
+    </div>
+
+    <div class="main-area">
+        <!-- サイドバー -->
+        <aside class="sidebar">
+            <div class="counter-box">
+                <div class="counter" id="hit-counter">012345</div>
+                <span class="counter-text">Since 1999.07.07</span>
+            </div>
+
+            <div class="menu-box">
+                <div class="menu-title">.: Menu :.</div>
+                <ul class="menu-list">
+                    <li><a href="#">Top</a></li>
+                    <li><a href="#" onclick="alert('管理人のプロフィールです。\n\n名前：蒼氷の堕天使\n性別：男\n年齢：秘密\n生息地：ネットの海\n属性：Ice')">Profile</a></li>
+                    <li><a href="#" onclick="alert('現在工事中です。もうしばらくお待ちください。')">Diary</a> <span style="font-size:9px; color:#ff0000; font-weight:bold;">UP!</span></li>
+                    <li><a href="#" onclick="alert('詩のコーナーです。\n\n「凍てつく波動」\n「水晶の涙」\n「深海」')">Poems</a></li>
+                    <li><a href="#" onclick="alert('自作イラスト展示室。\n無断転載禁止！！')">Gallery</a></li>
+                    <li><a href="#" onclick="alert('掲示板です。\nカキコよろしく！\n（マナーを守ってね）')">BBS</a></li>
+                    <li><a href="#" onclick="alert('相互リンク募集中。\nバナーはお持ち帰りでお願いします。')">Link</a></li>
+                    <li><a href="mailto:fake@example.com">Mail</a></li>
+                </ul>
+            </div>
+
+            <div style="text-align:center; font-size:10px; margin-bottom:10px;">
+                <img src="https://placehold.co/88x31/001a33/ffff00?text=IE+4.0" alt="IE 4.0"><br>
+                <br>
+                <img src="https://placehold.co/88x31/000000/00ced1?text=Netscape" alt="Netscape">
+            </div>
+        </aside>
+
+        <!-- メインコンテンツ -->
+        <main class="content">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <span class="kirakira">.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*</span><br>
+                <br>
+                あなたは <span style="color:#ff0000; font-size:1.2rem; font-weight:bold;" id="visitor-count"></span> 人目の迷い人です。<br>
+                （キリ番 123456 GETした人はBBSで報告してください）<br>
+                <br>
+                <span class="kirakira">.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*</span>
+            </div>
+
+            <h2>What's New</h2>
+            <div class="update-log">
+                <span class="date">200X.12.04</span> <span class="new-mark">NEW!</span> TOP絵変更しました。蒼く染めました。<br>
+                <span class="date">200X.11.20</span> Linkページ更新。相互リンク1件追加。<br>
+                <span class="date">200X.11.15</span> Diary更新。「静寂な月曜日」<br>
+                <span class="date">200X.11.01</span> カウンターが回ってなかったので修正。<br>
+                <span class="date">200X.10.25</span> サイト開設。<br>
+                <span class="date">200X.10.20</span> 構想開始。<br>
+                <span class="date">1999.07.07</span> ネットの海を漂流開始...
+            </div>
+
+            <h2>Information</h2>
+            <p>
+                当サイトはリンクフリーですが、直リンは禁止です。<br>
+                バナーは必ずお持ち帰り（ダウンロード）してください。<br>
+                荒らし、中傷、出会い系目的のカキコは削除対象です。<br>
+                <span style="color: #ff0000;">※隠しページあります。探してみてね。</span>
+            </p>
+
+            <h2>About Master</h2>
+            <table style="width: 100%; border: 1px solid #004488; font-size: 0.9rem; margin-top: 10px;">
+                <tr>
+                    <td style="background:#00264d; width:30%; padding:5px; color:#ffff00;">HN</td>
+                    <td style="padding:5px;">蒼氷の堕天使（Ice Angel）</td>
+                </tr>
+                <tr>
+                    <td style="background:#00264d; padding:5px; color:#ffff00;">Like</td>
+                    <td style="padding:5px;">ヴィジュアル系、青、シルバーアクセ、深海</td>
+                </tr>
+                <tr>
+                    <td style="background:#00264d; padding:5px; color:#ffff00;">Respect</td>
+                    <td style="padding:5px;">MALICE MIZER, LAREINE</td>
+                </tr>
+                <tr>
+                    <td style="background:#00264d; padding:5px; color:#ffff00;">Machine</td>
+                    <td style="padding:5px;">自作PC (Pentium III)</td>
+                </tr>
+            </table>
+
+            <div class="banner-area">
+                ── BANNER ──<br>
+                <div class="banner my-banner">Blue Rose</div><br>
+                <span style="font-size:0.7rem;">(200x40)</span>
+            </div>
+
+        </main>
+    </div>
+
+    <footer>
+        <hr>
+        Copyright (C) 1999-200X Blue Rose All Rights Reserved.<br>
+        無断転載を禁じます。<br>
+        <a href="#">WebRing</a> [ <a href="#">Prev</a> | <a href="#">Next</a> | <a href="#">Random</a> ]
+    </footer>
+</div>
+
+<div id="cursor-text">†</div>
+
+<script>
+    // --- JavaScript for Retro Effects ---
+
+    // 1. アクセスカウンター (偽物)
+    // リロードするたびに少し増える
+    function updateCounter() {
+        let count = localStorage.getItem('retroHitCounter');
+        if (!count) {
+            count = 123400; // 初期値
+        } else {
+            // ランダムに1〜3増やす
+            count = parseInt(count) + Math.floor(Math.random() * 3) + 1;
+        }
+        localStorage.setItem('retroHitCounter', count);
+        
+        // ゼロ埋め
+        let countStr = count.toString().padStart(6, '0');
+        document.getElementById('hit-counter').innerText = countStr;
+        document.getElementById('visitor-count').innerText = countStr;
+    }
+
+    // 3. タイトルバーの文字を流す
+    let originalTitle = document.title;
+    let titleMsg = " ...Welcome to the Azure Abyss... ";
+    let titlePos = 0;
+
+    function scrollTitle() {
+        document.title = titleMsg.substring(titlePos) + titleMsg.substring(0, titlePos) + " " + originalTitle;
+        titlePos++;
+        if (titlePos > titleMsg.length) {
+            titlePos = 0;
+        }
+        setTimeout(scrollTitle, 200);
+    }
+
+    // 初期化
+    window.onload = function() {
+        updateCounter();
+        scrollTitle();
+        
+        // たまに「右クリック禁止」を出すためのイベントリスナー
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            // ブラウザのネイティブアラートは推奨されないため、
+            // 実際はカスタムモーダルが好ましいが、レトロ感を出すために
+            // ここでは機能自体をブロックするだけに留めるか、
+            // ステータスバー（今はもうない）にメッセージを出すような挙動を模倣。
+            console.log("右クリックは禁止です！");
+            alert("右クリックは禁止です！！\nソースは見ないでください。");
+        });
+    };
+
+</script>
+
+</body>
+</html>
