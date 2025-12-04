@@ -21,7 +21,6 @@
 
         body {
             background-color: var(--bg-color);
-            /* BBSなので背景画像は少し控えめに（読みやすさ重視） */
             background-image: 
                 radial-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 2px);
             background-size: 50px 50px;
@@ -159,15 +158,6 @@
             white-space: pre-wrap; /* 改行を反映 */
         }
 
-        /* 管理人レス風のスタイル */
-        .admin-res {
-            margin-top: 10px;
-            margin-left: 20px;
-            color: #ffcccc;
-            font-size: 12px;
-        }
-
-        /* ページネーション（見た目だけ） */
         .pagination {
             text-align: center;
             margin-top: 30px;
@@ -198,10 +188,11 @@
 
     <!-- 投稿フォーム -->
     <div class="form-container">
+        <!-- submitイベントを使用するため、ボタンではなくformタグでイベントを拾います -->
         <form id="bbs-form">
             <div class="form-row">
                 <span class="form-label">Name</span>
-                <input type="text" id="name" required placeholder="名無しさん">
+                <input type="text" id="name" placeholder="名無しさん">
             </div>
             <div class="form-row">
                 <span class="form-label">E-mail</span>
@@ -209,14 +200,14 @@
             </div>
             <div class="form-row">
                 <span class="form-label">Subject</span>
-                <input type="text" id="subject" required value="無題">
+                <input type="text" id="subject" value="無題">
             </div>
             <div class="form-row" style="align-items: flex-start;">
                 <span class="form-label">Body</span>
-                <textarea id="body" required></textarea>
+                <textarea id="message" required></textarea>
             </div>
             <div style="text-align: center; margin-top: 10px;">
-                <input type="submit" value="送信する">
+                <input type="submit" id="sendBtn" value="送信する">
                 <input type="reset" value="リセット">
             </div>
             <div class="note">
@@ -229,7 +220,7 @@
     <hr>
 
     <!-- 記事一覧 -->
-    <div id="posts-area" class="post-container">
+    <div id="postsArea" class="post-container">
         <div style="text-align:center; padding: 20px;">
             Now Loading...<br>
             <span style="font-size:10px; color:#ffff00;">読み込み中...</span>
@@ -250,13 +241,12 @@
         Copyright (C) Blue Rose All Rights Reserved.
     </footer>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK & Logic -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // 必要な機能をインポート
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // --- Firebase Configuration & Auth ---
         const firebaseConfig = {
             apiKey: "AIzaSyAIfK544JkLKVAFTvptXURYiEfSAhWEXkU",
             authDomain: "room-52ee1.firebaseapp.com",
@@ -265,164 +255,124 @@
             messagingSenderId: "231795675776",
             appId: "1:231795675776:web:58942d6b4ecfb6e0208c65"
         };
-        // If config is missing, rely on global if available (environment specific)
-        const app = initializeApp(typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig);
-        const auth = getAuth(app);
+
+        // Firebaseの初期化
+        const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const COLLECTION_NAME = 'bbs_posts';
 
-        // 匿名認証
-        async function initAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    // カスタムトークンがある場合（通常はこちら）
-                    // Note: signInWithCustomToken is not imported, assuming anonymous for this simple BBS if token fails or not present.
-                    // For strict adherence to rules, we should try/catch or use anonymous as fallback.
-                    // Since I cannot import 'signInWithCustomToken' dynamically without changing the import statement above,
-                    // I will stick to anonymous auth for this public BBS demo as it is robust.
-                    // *Correction*: Rule says "ALWAYS call signInWithCustomToken... OR signInAnonymously".
-                    // I will prioritize anonymous for simplicity in this generated file context unless token is strictly required.
-                    await signInAnonymously(auth);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth failed:", error);
-            }
-        }
+        const form = document.getElementById("bbs-form");
+        const sendBtn = document.getElementById("sendBtn");
 
-        initAuth();
+        // 投稿ボタン（フォーム送信）を押した時の処理
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault(); // 画面リロードを防ぐ
 
-        // --- Logic ---
-        const postsArea = document.getElementById('posts-area');
-        const form = document.getElementById('bbs-form');
+            // ボタンを無効化（連打防止）
+            sendBtn.disabled = true;
+            sendBtn.value = "送信中...";
 
-        // データの監視と表示
-        // ルール: 複合クエリ(orderBy)は避ける -> 全取得してJSでソート
-        onAuthStateChanged(auth, (user) => {
-            if (!user) return;
-
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', COLLECTION_NAME);
+            const nameInput = document.getElementById("name");
+            const emailInput = document.getElementById("email");
+            const subInput = document.getElementById("subject");
+            const msgInput = document.getElementById("message");
             
-            onSnapshot(colRef, (snapshot) => {
-                const posts = [];
-                snapshot.forEach(doc => {
-                    posts.push({ id: doc.id, ...doc.data() });
-                });
+            if (msgInput.value === "") {
+                alert("メッセージを入力してください");
+                sendBtn.disabled = false;
+                sendBtn.value = "送信する";
+                return;
+            }
 
-                // JSで日付降順ソート (新しいのが上)
-                posts.sort((a, b) => {
-                    const t1 = a.timestamp ? a.timestamp.seconds : 0;
-                    const t2 = b.timestamp ? b.timestamp.seconds : 0;
-                    return t2 - t1;
+            try {
+                // "posts" コレクションにデータを追加
+                // 元のBBSデザインに合わせて、emailやsubjectも保存するように拡張
+                await addDoc(collection(db, "posts"), {
+                    name: nameInput.value || "名無しさん",
+                    email: emailInput.value || "",
+                    subject: subInput.value || "無題",
+                    text: msgInput.value,
+                    date: serverTimestamp() // サーバー側の日時
                 });
-
-                renderPosts(posts);
-            }, (error) => {
-                console.error("Error fetching posts:", error);
-                postsArea.innerHTML = '<div style="color:red; text-align:center;">Error loading posts...</div>';
-            });
+                
+                // 入力欄をクリア
+                msgInput.value = "";
+                // subject等は残すかクリアするかはお好みで（ここではリセットしない）
+                
+                alert("書き込み完了しました！");
+            } catch (err) {
+                console.error("エラー:", err);
+                alert("送信に失敗しました");
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.value = "送信する";
+            }
         });
 
-        // 投稿のレンダリング
-        function renderPosts(posts) {
-            postsArea.innerHTML = '';
-            
-            if (posts.length === 0) {
+        // データのリアルタイム監視
+        // Firestoreで複合インデックスが必要な場合があります（コンソールを確認してください）
+        const q = query(collection(db, "posts"), orderBy("date", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const postsArea = document.getElementById("postsArea");
+            postsArea.innerHTML = ""; // 一旦クリア
+
+            if (snapshot.empty) {
                 postsArea.innerHTML = '<div style="text-align:center; margin: 30px;">まだ書き込みはありません。<br>一番乗りを目指しましょう！</div>';
                 return;
             }
 
             // 擬似的な投稿番号（表示用）: 総数から引いていく
-            let displayNum = posts.length;
+            let displayNum = snapshot.size;
 
-            posts.forEach(post => {
-                const dateObj = post.timestamp ? new Date(post.timestamp.seconds * 1000) : new Date();
-                const dateStr = formatDate(dateObj);
-                const safeName = escapeHtml(post.name || '名無しさん');
-                const safeSubject = escapeHtml(post.subject || '無題');
-                const safeBody = escapeHtml(post.body || '');
-                const safeEmail = escapeHtml(post.email || '');
+            snapshot.forEach((doc) => {
+                const post = doc.data();
+                
+                // 日付の変換
+                let dateStr = "Unknown Date";
+                if (post.date) {
+                    const d = post.date.toDate();
+                    dateStr = formatDate(d);
+                }
 
+                // XSS対策
+                const safeName = escapeHTML(post.name || "名無しさん");
+                const safeSub = escapeHTML(post.subject || "無題");
+                const safeText = escapeHTML(post.text || "");
+                const safeEmail = escapeHTML(post.email || "");
+
+                // メールアドレスがある場合はリンクにする
                 const nameDisplay = safeEmail 
                     ? `<a href="mailto:${safeEmail}">${safeName}</a>` 
                     : safeName;
 
+                // レトロデザインのHTMLに合わせて生成
                 const html = `
                     <div class="post">
-                        <div class="post-header">[${displayNum}] <span style="color:#ffffff;">${safeSubject}</span></div>
+                        <div class="post-header">[${displayNum}] <span style="color:#ffffff;">${safeSub}</span></div>
                         <div class="post-meta">
                             Name：<span class="post-name">${nameDisplay}</span> 
                             Date：${dateStr}
                         </div>
-                        <div class="post-body">${safeBody}</div>
+                        <div class="post-body">${safeText}</div>
                     </div>
                     <hr>
                 `;
-                
                 postsArea.insertAdjacentHTML('beforeend', html);
                 displayNum--;
             });
-        }
-
-        // 投稿処理
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const submitBtn = form.querySelector('input[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.value = "送信中...";
-
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const subject = document.getElementById('subject').value;
-            const body = document.getElementById('body').value;
-
-            if (!auth.currentUser) {
-                alert("接続エラー：再読み込みしてください");
-                return;
-            }
-
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', COLLECTION_NAME), {
-                    name: name,
-                    email: email,
-                    subject: subject,
-                    body: body,
-                    timestamp: serverTimestamp(),
-                    userAgent: navigator.userAgent // 遊び心（表示はしない）
-                });
-                
-                form.reset();
-                document.getElementById('name').value = name; // 名前は残す（親切設計）
-                alert("書き込み完了しました！");
-
-            } catch (error) {
-                console.error("Error adding post:", error);
-                alert("書き込みに失敗しました...");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.value = "送信する";
-            }
         });
 
-        // ユーティリティ: HTMLエスケープ
-        function escapeHtml(str) {
-            if(!str) return '';
-            return str.replace(/[&<>"']/g, function(m) {
-                return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                }[m];
-            });
+        // XSS対策（タグをそのまま表示しないための関数）
+        function escapeHTML(str) {
+            if (!str) return "";
+            return str.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/'/g, '&#039;');
         }
 
-        // ユーティリティ: 日付フォーマット (2000/01/01(Sat) 00:00)
+        // 日付フォーマット関数 (YYYY/MM/DD(Day) HH:MM)
         function formatDate(d) {
             const week = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const yyyy = d.getFullYear();
