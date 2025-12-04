@@ -257,7 +257,14 @@
         import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Configuration & Auth ---
-        const firebaseConfig = JSON.parse(new URLSearchParams(window.location.search).get('firebase_config') || '{}') || JSON.parse(localStorage.getItem('firebase_config') || '{}');
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIfK544JkLKVAFTvptXURYiEfSAhWEXkU",
+            authDomain: "room-52ee1.firebaseapp.com",
+            projectId: "room-52ee1",
+            storageBucket: "room-52ee1.firebasestorage.app",
+            messagingSenderId: "231795675776",
+            appId: "1:231795675776:web:58942d6b4ecfb6e0208c65"
+        };
         // If config is missing, rely on global if available (environment specific)
         const app = initializeApp(typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig);
         const auth = getAuth(app);
